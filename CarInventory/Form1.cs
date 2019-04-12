@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace CarInventory
 {
@@ -16,6 +17,7 @@ namespace CarInventory
         public Form1()
         {
             InitializeComponent();
+            loadDB();
         }
 
         private void addButton_Click(object sender, EventArgs e)
@@ -43,6 +45,7 @@ namespace CarInventory
                 {
                     inventory.RemoveAt(i);
                 }
+                outputLabel.Text = yearInput.Text = makeInput.Text = colourInput.Text = mileageInput.Text = "";
             }
 
             int index = inventory.FindIndex(car => car.make == makeInput.Text);
@@ -70,7 +73,62 @@ namespace CarInventory
 
         private void exitButton_Click(object sender, EventArgs e)
         {
+            saveDB();
             Application.Exit();
+        }
+
+        public void loadDB()
+        {
+            string newYear, newMake, newColour, newMileage;
+
+            XmlReader reader = XmlReader.Create("Resources/CarXML.xml", null);
+
+           
+            while (reader.Read())
+            {
+                if (reader.NodeType == XmlNodeType.Text)
+                {
+                    newYear = reader.ReadString();
+
+                    reader.ReadToNextSibling("make");
+                    newMake = reader.ReadString();
+
+                    reader.ReadToNextSibling("colour");
+                    newColour = reader.ReadString();
+
+                    reader.ReadToNextSibling("mileage");
+                    newMileage = reader.ReadString();
+
+                    Car c = new Car (newYear, newMake, newColour, newMileage);
+                    inventory.Add(c);
+                }
+            }
+
+            reader.Close();
+        }
+
+        public void saveDB()
+        {
+           
+             XmlWriter writer = XmlWriter.Create("Resources/CarXML.xml", null);
+
+            writer.WriteStartElement("Cars");
+
+            foreach (Car c in inventory)
+            {
+                writer.WriteStartElement("Car");
+
+                writer.WriteElementString("year", c.year);
+                writer.WriteElementString("make", c.make);
+                writer.WriteElementString("colour", c.colour);
+                writer.WriteElementString("mileage", c.mileage);
+                
+
+                writer.WriteEndElement();
+            }
+
+            writer.WriteEndElement();
+            writer.Close();
         }
     }
 }
